@@ -9,7 +9,7 @@ package com.mycompany.lecture04;
  * @author icbt
  */
 public class Person {
-
+ 
     private String nic;
     private String firstName;
     private String lastName;
