@@ -11,8 +11,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -20,7 +18,6 @@ import java.util.List;
  */
 @Path("students")
 public class StudentResource {
-    static List<Student> students = new ArrayList<>();
     Gson gson = new Gson();
 
     public StudentResource() {
@@ -29,8 +26,10 @@ public class StudentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStudents(){ 
+        
+        
         return Response
-                .ok(gson.toJson(students))
+                .ok(gson.toJson(new DBUtils().getStudents()))
                 .build();
     }
     
@@ -38,24 +37,30 @@ public class StudentResource {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStudent(@PathParam("id") int id){ 
-        for (Student st : students) {
-            if (st.getId() == id) {
-                return Response
-                    .ok(gson.toJson(st))
-                    .build();
-            }
-        }
+        try {
+        Student student = new DBUtils().getStudent(id);
         
+        if (student != null) {
+                  return Response
+                    .ok(gson.toJson(student))
+                    .build();
+        } 
+
         return Response
                 .status(Response.Status.NOT_FOUND)
                 .build();
+        } catch(Exception e) {
+             return Response
+                .status(Response.Status.INTERNAL_SERVER_ERROR)
+                .build();
+        }
     }
     
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addStudent(String json){ 
         Student student = gson.fromJson(json, Student.class); 
-        students.add(student);
+        new DBUtils().addStudent(student);
         return Response
                 .status(Response.Status.CREATED)
                 .build();
@@ -66,36 +71,19 @@ public class StudentResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateStudent(String json, @PathParam("id") int id){ 
         Student student = gson.fromJson(json, Student.class);
-        
-        for (Student st : students) {
-            if (st.getId() == id) {
-                students.set(students.indexOf(st), student);
-                return Response
+        new DBUtils().updateStudent(student);
+        return Response
                     .ok()
                     .build();
-            }
-        }
-  
-        return Response
-                .status(Response.Status.NOT_FOUND)
-                .build();
     }
     
     
     @DELETE
     @Path("{id}")
     public Response deleteStudent(@PathParam("id") int id){ 
-        for (Student st : students) {
-            if (st.getId() == id) {
-                students.remove(st);
-                return Response
-                    .ok(gson.toJson(st))
-                    .build();
-            }
-        }
-        
+        new DBUtils().deleteStudent(id);
         return Response
-                .status(Response.Status.NOT_FOUND)
-                .build();
+            .ok()
+            .build();
     }
 }
